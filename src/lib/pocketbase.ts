@@ -11,7 +11,13 @@ export interface User {
 	avatar?: string;
 }
 
-export const currentUser = writable<User | null>(null);
+export const currentUser = writable<User | null>(pb.authStore.model);
+
+export async function login(email: string, password: string) {
+	const authData = await pb.collection('users').authWithPassword(email, password);
+	currentUser.set(authData.record);
+	return authData.record;
+}
 
 pb.authStore.onChange(() => {
 	console.log('AuthStore changed', pb.authStore.model);
@@ -27,3 +33,5 @@ pb.authStore.onChange(() => {
 		currentUser.set(null);
 	}
 });
+
+// ... other auth-related functions

@@ -24,6 +24,9 @@
 				{:else}
 					<a href="/auth" class="btn btn-sm variant-ghost-surface">Login</a>
 				{/if}
+				{#if $currentUser && $currentUser.role === 'admin'}
+					<AdminPanel />
+				{/if}
 				<LightSwitch />
 			</svelte:fragment>
 		</AppBar>
