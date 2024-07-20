@@ -7,31 +7,29 @@ export const pb = new PocketBase('http://127.0.0.1:8090');
 export interface User {
 	id: string;
 	email: string;
-	name?: string;
-	avatar?: string;
+	role?: string;
+	// Add other properties as needed
 }
 
-export const currentUser = writable<User | null>(pb.authStore.model);
+export const currentUser = writable<User | null>(pb.authStore.model as User | null);
 
 export async function login(email: string, password: string) {
 	const authData = await pb.collection('users').authWithPassword(email, password);
-	currentUser.set(authData.record);
+	currentUser.set(authData.record as User);
 	return authData.record;
 }
 
-pb.authStore.onChange(() => {
-	console.log('AuthStore changed', pb.authStore.model);
-	if (pb.authStore.isValid) {
-		const user: User = {
-			id: pb.authStore.model?.id,
-			email: pb.authStore.model?.email,
-			name: pb.authStore.model?.name,
-			avatar: pb.authStore.model?.avatar
-		};
-		currentUser.set(user);
-	} else {
-		currentUser.set(null);
-	}
+pb.authStore.onChange((auth) => {
+	console.log('AuthStore changed', auth);
+	currentUser.set(auth ? (auth.model as unknown as User) : null);
 });
 
+// Example of getting a user
+export async function getUser() {
+	if (pb.authStore.model) {
+		const user = await pb.collection('users').getOne<User>(pb.authStore.model?.id);
+		return user;
+	}
+	return null;
+}
 // ... other auth-related functions

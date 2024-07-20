@@ -6,10 +6,26 @@
 	import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
 	import { storePopup } from '@skeletonlabs/skeleton';
 	import { currentUser } from '$lib/pocketbase';
+	import { onMount } from 'svelte';
+	import { userRole } from '$lib/stores/userStore';
+	import { pb } from '$lib/pocketbase';
+
+	interface User {
+		id: string;
+		email: string;
+		role?: string;
+	}
 
 	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 
 	let currentTile = 0;
+
+	onMount(async () => {
+		if (pb.authStore.isValid && pb.authStore.model) {
+			const user = await pb.collection('users').getOne(pb.authStore.model.id);
+			userRole.set(user.role);
+		}
+	});
 </script>
 
 <AppShell>
@@ -23,9 +39,6 @@
 					<a href="/profile" class="btn btn-sm variant-ghost-surface">Profile</a>
 				{:else}
 					<a href="/auth" class="btn btn-sm variant-ghost-surface">Login</a>
-				{/if}
-				{#if $currentUser && $currentUser.role === 'admin'}
-					<AdminPanel />
 				{/if}
 				<LightSwitch />
 			</svelte:fragment>

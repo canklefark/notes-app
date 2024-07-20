@@ -1,20 +1,24 @@
 <script lang="ts">
-	import { pb, currentUser } from '$lib/pocketbase';
-	import { onMount } from 'svelte';
+	import { pb } from '$lib/pocketbase';
+	import type { User } from '$lib/types';
 
-	let users = [];
+	let users: User[] = [];
 
-	onMount(async () => {
-		if ($currentUser && $currentUser.role === 'admin') {
-			const resultList = await pb.collection('users').getList(1, 50);
-			users = resultList.items;
-		}
-	});
+	async function fetchUsers() {
+		users = await pb.collection('users').getFullList<User>();
+	}
 
-	async function updateUserRole(user, newRole) {
+	async function updateUserRole(user: User, newRole: string) {
 		await pb.collection('users').update(user.id, { role: newRole });
 		users = users.map((u) => (u.id === user.id ? { ...u, role: newRole } : u));
 	}
+
+	function handleRoleChange(user: User, event: Event) {
+		const target = event.target as HTMLSelectElement;
+		updateUserRole(user, target.value);
+	}
+
+	fetchUsers();
 </script>
 
 {#if $currentUser && $currentUser.role === 'admin'}
